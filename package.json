@@ -1,0 +1,34 @@
+{
+  "name": "api-proxy-server",
+  "version": "1.0.0",
+  "description": "A simple web server that proxies requests to external APIs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node test_server.js",
+    "build": "npm run clean && npm run copy-files && npm run build:install",
+    "clean": "rm -rf dist",
+    "copy-files": "mkdir -p dist && cp server.js package.json README.md test_server.js dist/",
+    "build:install": "cd dist && npm install --production",
+    "build:start": "cd dist && node server.js",
+    "build:test": "cd dist && node test_server.js"
+  },
+  "keywords": [
+    "proxy",
+    "api",
+    "server",
+    "express",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0",
+    "mongoose": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

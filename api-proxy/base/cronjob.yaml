@@ -1,0 +1,97 @@
+#apiVersion: batch/v1
+#kind: CronJob
+#metadata:
+#  name: api-proxy-password-rotation
+#  namespace: api-proxy
+#spec:
+#  schedule: "*/5 * * * *"
+#  successfulJobsHistoryLimit: 2
+#  failedJobsHistoryLimit: 1
+#  concurrencyPolicy: Forbid
+#  jobTemplate:
+#    spec:
+#      activeDeadlineSeconds: 180
+#      template:
+#        spec:
+#          serviceAccountName: password-rotator
+#          containers:
+#          - name: password-rotator
+#            image: mongo:6-jammy
+#            command: ["/bin/bash"]
+#            args:
+#            - -c
+#            - |
+#              set -e
+#              
+#              apt-get update >/dev/null 2>&1
+#              apt-get install -y curl >/dev/null 2>&1
+#              
+#              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" >/dev/null 2>&1
+#              chmod +x kubectl && mv kubectl /usr/local/bin/
+#              
+#              CURRENT_USERNAME=$(cat /secrets/mongodb/MONGO_USERNAME)
+#              CURRENT_PASSWORD=$(cat /secrets/mongodb/MONGO_PASSWORD)
+#              CURRENT_API_KEY=$(cat /secrets/api/API_KEY)
+#              
+#              NEW_MONGO_PASS=$(openssl rand -base64 20 | tr -d "=+/" | head -c 20)
+#              NEW_API_KEY=$(openssl rand -hex 32)
+#              
+#              MONGO_USER_B64=$(echo -n "$CURRENT_USERNAME" | base64 -w 0)
+#              MONGO_PASS_B64=$(echo -n "$NEW_MONGO_PASS" | base64 -w 0)
+#              API_KEY_B64=$(echo -n "$NEW_API_KEY" | base64 -w 0)
+#              
+#              if mongosh "mongodb://$CURRENT_USERNAME:$CURRENT_PASSWORD@$MONGODB_HOST:$MONGODB_PORT/admin" --eval "db.runCommand('ping')" --quiet; then
+#                echo "Updating MongoDB password..."
+#                mongosh "mongodb://$CURRENT_USERNAME:$CURRENT_PASSWORD@$MONGODB_HOST:$MONGODB_PORT/admin" \
+#                  --eval "db.updateUser('$CURRENT_USERNAME', {pwd: '$NEW_MONGO_PASS'})" --quiet
+#                
+#                cat << EOF | kubectl apply -f -
+#              apiVersion: v1
+#              kind: Secret
+#              metadata:
+#                name: mongodb-secret
+#                namespace: api-proxy
+#              type: Opaque
+#              data:
+#                MONGO_PASSWORD: $MONGO_PASS_B64
+#                MONGO_USERNAME: $MONGO_USER_B64
+#              ---
+#              apiVersion: v1
+#              kind: Secret
+#              metadata:
+#                name: api-secret
+#                namespace: api-proxy
+#              type: Opaque
+#              data:
+#                API_KEY: $API_KEY_B64
+#              EOF
+#                
+#                kubectl rollout restart deployment/mongodb -n api-proxy
+#                kubectl rollout restart deployment/api-proxy -n api-proxy
+#                echo "Password rotation completed"
+#              else
+#                echo "MongoDB connection failed"
+#                exit 1
+#              fi
+#            env:
+#            - name: MONGODB_HOST
+#              value: "mongodb"
+#            - name: MONGODB_PORT
+#              value: "27017"
+#            volumeMounts:
+#            - name: mongodb-secret
+#              mountPath: /secrets/mongodb
+#              readOnly: true
+#            - name: api-secret
+#              mountPath: /secrets/api
+#              readOnly: true
+#          volumes:
+#          - name: mongodb-secret
+#            secret:
+#              secretName: mongodb-secret
+#          - name: api-secret
+#            secret:
+#              secretName: api-secret
+#          restartPolicy: OnFailure
+#            
+#

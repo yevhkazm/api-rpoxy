@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - api-deployment.yaml
+  - api-service.yaml  
+  - mongodb-deployment.yaml
+  - mongodb-service.yaml
+  - dbdata6-persistentvolumeclaim.yaml
+  - secret.yaml
+  - cronjob.yaml
+  - password-rotation-rbac.yaml
+
+namespace: api-proxy

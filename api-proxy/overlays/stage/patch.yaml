@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-proxy
+  namespace: api-proxy
+spec:
+  selector:
+    matchLabels:
+      app: api-proxy
+  template:
+    metadata:
+      labels:
+        app: api-proxy
+    spec:
+      containers:
+      - name: api-proxy
+        env:
+        - name: MONGODB_URL
+          value: mongodb://root:example@mongodb:27017/api-proxy?authSource=admin
+        - name: MONGO_HOST
+          value: "mongodb"
+        - name: MONGO_PORT
+          value: "27017"
+        - name: MONGO_DATABASE
+          value: api-proxy
+        - name: MONGO_USERNAME
+          value: root
+        - name: MONGO_PASSWORD
+          value: example
+        - name: MONGO_AUTH_SOURCE
+          value: admin

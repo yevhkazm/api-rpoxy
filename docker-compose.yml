@@ -1,0 +1,41 @@
+services:
+  api-proxy:
+    build: 
+      context: .
+      dockerfile: .Dockerfile
+    image: api-proxy
+    environment:
+      - MONGODB_URL=mongodb://root:example@mongodb:27017/node-boilerplate?authSource=admin
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_DATABASE=api-proxy
+      - MONGO_USERNAME=root
+      - MONGO_PASSWORD=example
+      - MONGO_AUTH_SOURCE=admin
+    ports:
+      - '3000:3000'
+    depends_on:
+      - mongodb
+    networks:
+      - node-network
+
+  mongodb:
+    image: mongo:6-jammy  # Updated to newer version
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+      - MONGO_INITDB_DATABASE=api-proxy
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - dbdata6:/data/db
+    networks:
+      - node-network
+
+volumes:
+  dbdata6:
+
+networks:
+  node-network:
+    driver: bridge

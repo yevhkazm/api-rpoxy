@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-proxy
+  namespace: api-proxy
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-proxy
+  template:
+    metadata:
+      labels:
+        app: api-proxy
+    spec:
+      containers:
+      - name: api-proxy
+        env:
+        - name: MONGODB_HOST
+          value: "mongodb"
+        - name: MONGODB_PORT
+          value: "27017"
+        - name: MONGODB_DATABASE
+          value: api-proxy
+        - name: MONGODB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: MONGO_USERNAME
+        - name: MONGODB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: MONGO_PASSWORD
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-secret
+              key: API_KEY
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        securityContext:
+          runAsGroup: 55
+          runAsNonRoot: true
+          runAsUser: 55
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"

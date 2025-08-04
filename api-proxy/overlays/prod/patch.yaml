@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-proxy
+  namespace: api-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-proxy
+  template:
+    metadata:
+      labels:
+        app: api-proxy
+    spec:
+      containers:
+      - name: api-proxy
+        env:
+        - name: MONGODB_URL
+          value: mongodb://root:example@mongodb:27017/api-proxy?authSource=admin
+      ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        - containerPort: 3000
+          name: liveness
+          protocol: TCP
+      securityContext:
+          runAsGroup: 55
+          runAsNonRoot: true
+          runAsUser: 55

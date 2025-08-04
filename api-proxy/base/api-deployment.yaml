@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: api-proxy
+  name: api-proxy
+  namespace: api-proxy
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: api-proxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: api-proxy
+    spec:
+      containers:
+      - name: api-proxy
+        image: api-proxy:latest
+        imagePullPolicy: Never
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: default
+      serviceAccountName: default
+      terminationGracePeriodSeconds: 30
