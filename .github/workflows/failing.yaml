@@ -3,7 +3,7 @@ name: Always Fail
 on:
   push:
   pull_request:
-
+  workflow_dispatch:
 jobs:
   doomed-job:
     runs-on: ubuntu-latest
