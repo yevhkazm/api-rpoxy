@@ -1,0 +1,17 @@
+name: Always Fail
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  doomed-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Intentionally fail
+        run: |
+          echo "Summoning the CI failure spirit 👻"
+          exit 1
